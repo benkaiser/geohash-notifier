@@ -1,0 +1,18 @@
+{
+  "name": "geohash-notifier",
+  "version": "1.0.0",
+  "description": "XKCD Geohash email notification service",
+  "main": "index.js",
+  "author": "Benjamin Kaiser",
+  "license": "MIT",
+  "dependencies": {
+    "async": "^2.1.2",
+    "express": "^4.14.0",
+    "geohash-coordinates": "^1.1.6",
+    "geolib": "^2.0.21",
+    "mongoose": "^4.6.5"
+  },
+  "scripts": {
+    "nodemon": "nodemon -x 'node --harmony' index.js"
+  }
+}

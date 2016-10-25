@@ -1,0 +1,7 @@
+FROM node:6-slim
+RUN npm install nodemon -g
+RUN mkdir /app
+WORKDIR /app
+ADD package.json /app/package.json
+RUN npm install
+ADD . /app
