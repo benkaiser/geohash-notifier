@@ -6,23 +6,30 @@ class CheckStocks {
   perform() {
     db.subscribers.find({}, (err, docs) => {
       this.cache(() => {
-        async.each(docs, this.check, () => db.close());
+        async.each(docs, this.check.bind(this), () => db.close());
       });
     });
   }
 
+  cache(callback) {
+    console.log('attempting to cache stock information...');
+    geohash.latest(this.geohashOptions(), callback);
+  }
+
   check(subscriber, callback) {
+    console.log('fetching geohash for:');
     console.log(subscriber);
-    geohash.latest({
+    geohash.latest(this.geohashOptions({
       location: `${subscriber.latitude},${subscriber.longitude}`,
-    }, (err, results) => {
+    }), (err, results) => {
+      console.log('geohash information:');
       console.log(results);
       callback();
     });
   }
 
-  cache(callback) {
-    geohash.latest({ cache: '/tmp/' }, callback);
+  geohashOptions(moreoptions = {}) {
+    return Object.assign({ cache: '/tmp' }, moreoptions);
   }
 }
 
