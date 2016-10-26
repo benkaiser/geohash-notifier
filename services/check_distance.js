@@ -11,8 +11,7 @@ class CheckDistance {
 
   check(point, callback) {
     let distance = this.distanceTo(point);
-    if (true)
-      this.notifySubscriber(distance, point);
+    this.notifySubscriber(distance, point);
     callback();
   }
 
