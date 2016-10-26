@@ -1,6 +1,8 @@
+let async = require('async');
+let geohash = require('geohash-coordinates');
+
 let db = require('../db');
-var geohash = require('geohash-coordinates');
-var async = require('async');
+var CheckDistance = require('../services/check_distance');
 
 class CheckStocks {
   perform() {
@@ -12,19 +14,14 @@ class CheckStocks {
   }
 
   cache(callback) {
-    console.log('attempting to cache stock information...');
     geohash.latest(this.geohashOptions(), callback);
   }
 
   check(subscriber, callback) {
-    console.log('fetching geohash for:');
-    console.log(subscriber);
     geohash.latest(this.geohashOptions({
       location: `${subscriber.latitude},${subscriber.longitude}`,
     }), (err, results) => {
-      console.log('geohash information:');
-      console.log(results);
-      callback();
+      new CheckDistance(subscriber, results).perform(callback);
     });
   }
 

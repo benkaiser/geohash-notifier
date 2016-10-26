@@ -1,7 +1,7 @@
 FROM node:6-slim
-RUN npm install nodemon -g
+RUN npm install -g yarn
+RUN yarn global add nodemon
 RUN mkdir /app
+ADD package.json yarn.lock /app/
 WORKDIR /app
-ADD package.json /app/package.json
-RUN npm install
-ADD . /app
+RUN yarn
