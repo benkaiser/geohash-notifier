@@ -1,3 +1,3 @@
 #!/bin/sh
 
-bin/run 'npm run test'
+bin/run 'npm test'
