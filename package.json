@@ -19,7 +19,8 @@
   },
   "scripts": {
     "nodemon": "./node_modules/nodemon/bin/nodemon.js -x 'node --harmony' index.js",
-    "test": "./node_modules/mocha/bin/mocha --harmony --recursive"
+    "test": "./node_modules/mocha/bin/mocha --harmony --recursive",
+    "start": "node --harmony index.js"
   },
   "devDependencies": {
     "chai": "^3.5.0",
