@@ -29,6 +29,9 @@
     "nodemon": "^1.11.0",
     "sinon": "^1.17.6"
   },
+  "engines": {
+      "node": "6"
+  },
   "jscsConfig": {
     "requireTrailingComma": false
   }
