@@ -1,0 +1,72 @@
+extends layout.pug
+
+block content
+  h1 Geohash Notification Service
+  p.lead
+    | This is a service to notify you everytime a
+    a(href='https://xkcd.com/426/')  geohash
+    |  is within a given radius of a location.
+  form
+    .form-group
+      label(for='email') Email address
+      input#email.form-control(type='email', name='email', placeholder='Email')
+    .form-group
+      label(for='map') Select Location
+      #map
+      input#coordinates.form-control(type='text', name='coordinates', disabled='')
+    .form-group
+      label(for='radius') Radius (Kilometers)
+      input#radius.form-control(type='number', oninput='updateRadius()', name='radius', value='20')
+    button.btn.btn-primary(type='submit') Submit
+
+block scripts
+  script.
+      var map;
+      var marker;
+      var circle;
+      var radius = 20;
+
+      function initMap() {
+        var Australia = {lat: -25.363, lng: 131.044};
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 3,
+          center: Australia
+        });
+        google.maps.event.addListener(map, 'click', function(event) {
+          placeMarker(event.latLng);
+          updateCircle();
+          updateInput(event.latLng);
+        });
+      }
+
+      function placeMarker(location) {
+        if (marker) marker.setMap(null);
+        marker = new google.maps.Marker({
+          position: location,
+          map: map
+        });
+      }
+
+      function updateInput(location) {
+        var input = document.getElementById('coordinates');
+        input.value = location.lat() + ',' +  location.lng();
+      }
+
+      function updateRadius() {
+        radius = document.getElementById('radius').value;
+        updateCircle();
+      }
+
+      function updateCircle() {
+        if (!marker) return;
+        if (circle) circle.setMap(null);
+        circle = new google.maps.Circle({
+          clickable: false,
+          fillColor: '#AA0000',
+          map: map,
+          radius: radius * 1000,    // 10 miles in metres
+          strokeOpacity: 0.1,
+        });
+        circle.bindTo('center', marker, 'position');
+      }
+  script(src='https://maps.googleapis.com/maps/api/js?key=AIzaSyAOUy5PDsUbXDapmKEhRtOBF4YeQXNd-uI&callback=initMap', async='', defer='')
