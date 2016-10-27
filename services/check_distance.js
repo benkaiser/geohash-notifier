@@ -11,8 +11,10 @@ class CheckDistance {
 
   check(point, callback) {
     let distance = this.distanceTo(point);
-    this.notifySubscriber(distance, point);
-    callback();
+    if (distance < this.subscriber.radius * 1000)
+      this.notifySubscriber(distance, point, callback);
+    else
+      callback();
   }
 
   distanceTo(point) {
@@ -20,8 +22,8 @@ class CheckDistance {
                               this.stripPoint(point));
   }
 
-  notifySubscriber(distance, point) {
-    new NotifySubscriber(distance, point, this.subscriber).perform();
+  notifySubscriber(distance, point, callback) {
+    new NotifySubscriber(distance, point, this.subscriber).perform(callback);
   }
 
   perform(callback) {
@@ -42,7 +44,6 @@ class CheckDistance {
 
   resultToPoint(result) {
     return [
-      this.pointFromGraticle(result.date, result.graticule),
       this.pointFromGraticle(result.date, result.global),
       result.neighbors.map((neighbor) =>
         this.pointFromGraticle(result.date, neighbor)

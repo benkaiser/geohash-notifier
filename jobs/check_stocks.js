@@ -1,6 +1,7 @@
 let async = require('async');
 let geohash = require('geohash-coordinates');
 
+require('../initializers');
 let db = require('../db');
 var CheckDistance = require('../services/check_distance');
 

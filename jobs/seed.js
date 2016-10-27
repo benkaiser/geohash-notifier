@@ -5,9 +5,9 @@ class Seed {
     db.subscribers.remove({}, () => {
       db.subscribers.create({
         email: 'benjaminjkaiser@gmail.com',
-        latitude: -39.5,
-        longitude: 144.5,
-        radius: 10,
+        latitude: -38.11294978918962,
+        longitude: 144.18869018554688,
+        radius: 30
       }, (err, docs) => {
         if (err) console.log(err);
         if (docs) console.log('docs created!');

@@ -6,14 +6,17 @@ block content
     | This is a service to notify you everytime a
     a(href='https://xkcd.com/426/')  geohash
     |  is within a given radius of a location.
-  form
+  if alert
+    .alert.alert-success(role="alert") #{alert}
+  form(action='/', method='POST')
     .form-group
       label(for='email') Email address
-      input#email.form-control(type='email', name='email', placeholder='Email')
+      input#email.form-control(type='email', name='email', placeholder='Email', required)
     .form-group
       label(for='map') Select Location
       #map
-      input#coordinates.form-control(type='text', name='coordinates', disabled='')
+      input#coordinates.form-control(type='text', disabled)
+      input#coordinates_hidden.form-control(type='hidden', name='coordinates')
     .form-group
       label(for='radius') Radius (Kilometers)
       input#radius.form-control(type='number', oninput='updateRadius()', name='radius', value='20')
@@ -49,7 +52,10 @@ block scripts
 
       function updateInput(location) {
         var input = document.getElementById('coordinates');
-        input.value = location.lat() + ',' +  location.lng();
+        var hiddenInput = document.getElementById('coordinates_hidden');
+        var value = location.lat() + ',' +  location.lng();
+        input.value = value;
+        hiddenInput.value = value;
       }
 
       function updateRadius() {
@@ -69,4 +75,15 @@ block scripts
         });
         circle.bindTo('center', marker, 'position');
       }
+
+      if (navigator.geolocation) {
+         navigator.geolocation.getCurrentPosition(function (position) {
+           initialLocation = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+           map.setCenter(initialLocation);
+           map.setZoom(8); 
+           placeMarker(initialLocation);
+           updateCircle();
+           updateInput(initialLocation);
+         });
+       }
   script(src='https://maps.googleapis.com/maps/api/js?key=AIzaSyAOUy5PDsUbXDapmKEhRtOBF4YeQXNd-uI&callback=initMap', async='', defer='')

@@ -7,10 +7,14 @@
   "license": "MIT",
   "dependencies": {
     "async": "^2.1.2",
+    "body-parser": "^1.15.2",
+    "dotenv": "^2.0.0",
     "express": "^4.14.0",
     "geohash-coordinates": "^1.1.6",
     "geolib": "^2.0.21",
+    "moment": "^2.15.2",
     "mongoose": "^4.6.5",
+    "nodemailer": "^2.6.4",
     "pug": "^2.0.0-beta6"
   },
   "scripts": {
