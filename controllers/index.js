@@ -8,9 +8,16 @@ router.get('/', function (req, res) {
 });
 
 router.post('/', function(req, res) {
-  console.log(filterBody(req.body));
   db.subscribers.create(filterBody(req.body));
   res.render('form', { alert: "Awesome! We'll let you know when a geohash is nearby" });
+});
+
+router.get('/unsubscribe', function(req, res) {
+  db.subscribers.find({ $or: [
+    { _id: req.query.id },
+    { email: req.query.email }
+  ]}).remove().exec();
+  res.render('form', { alert: 'Unsubscribe successful'});
 });
 
 function filterBody(body) {

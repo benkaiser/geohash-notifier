@@ -1,4 +1,9 @@
 h3 A Geohash is Nearby!
 p The geohash for #{prettyDate} is #{distance / 1000} kilometers from your location!
 a(href='http://maps.google.com/maps?q=loc:' + point.latitude + ',' + point.longitude)
-  img(src!='https://maps.googleapis.com/maps/api/staticmap?zoom=10&size=600x600&maptype=roadmap&markers=&markers=color:red%7Clabel:geohash%7C' + point.latitude + ',' + point.longitude)
+  img(src!='https://maps.googleapis.com/maps/api/staticmap?zoom=10&size=600x600&maptype=roadmap&markers=&markers=color:red%7Clabel:geohash%7C' + point.latitude + ',' + point.longitude + '&key=' + env.GOOGLE_API_KEY)
+
+p
+  a(href=env.APP_URL + '/unsubscribe?id=' + subscriber._id) Unsubscribe from this region
+p
+  a(href=env.APP_URL + '/unsubscribe?email=' + subscriber.email) Unsubscribe from all regions

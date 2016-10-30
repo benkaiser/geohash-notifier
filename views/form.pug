@@ -80,10 +80,10 @@ block scripts
          navigator.geolocation.getCurrentPosition(function (position) {
            initialLocation = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
            map.setCenter(initialLocation);
-           map.setZoom(8); 
+           map.setZoom(8);
            placeMarker(initialLocation);
            updateCircle();
            updateInput(initialLocation);
          });
        }
-  script(src='https://maps.googleapis.com/maps/api/js?key=AIzaSyAOUy5PDsUbXDapmKEhRtOBF4YeQXNd-uI&callback=initMap', async='', defer='')
+  script(src='https://maps.googleapis.com/maps/api/js?key=' + env.GOOGLE_API_KEY + '&callback=initMap', async='', defer='')

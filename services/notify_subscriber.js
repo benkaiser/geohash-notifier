@@ -26,6 +26,7 @@ class NotifySubscriber {
       point: this.point,
       prettyDate: this.prettyDate(),
       subscriber: this.subscriber,
+      env: process.env,
     });
   }
 
