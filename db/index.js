@@ -1,13 +1,7 @@
 class Database {
   constructor() {
     this.mongoose = require('mongoose');
-    this.mongoose.set('useFindAndModify', false);
-    const dbUrl = process.env.MONGO_URL || process.env.DATABASE_URL;
-    this.mongoose.connect(dbUrl, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      authSource: 'admin',
-    }).catch(err => console.error('MongoDB connection error:', err.message));
+    this.mongoose.connect(process.env.MONGO_URL || process.env.DATABASE_URL);
     this.setupModels();
   }
 
