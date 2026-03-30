@@ -1,4 +1,3 @@
-let async = require('async');
 let geolib = require('geolib');
 
 let NotifySubscriber = require('./notify_subscriber');
@@ -9,12 +8,11 @@ class CheckDistance {
     this.results = geohashResults;
   }
 
-  check(point, callback) {
+  async check(point) {
     let distance = this.distanceTo(point);
-    if (distance < this.subscriber.radius * 1000)
-      this.notifySubscriber(distance, point, callback);
-    else
-      callback();
+    if (distance < this.subscriber.radius * 1000) {
+      await this.notifySubscriber(distance, point);
+    }
   }
 
   distanceTo(point) {
@@ -22,12 +20,12 @@ class CheckDistance {
                               this.stripPoint(point));
   }
 
-  notifySubscriber(distance, point, callback) {
-    new NotifySubscriber(distance, point, this.subscriber).perform(callback);
+  async notifySubscriber(distance, point) {
+    await new NotifySubscriber(distance, point, this.subscriber).perform();
   }
 
-  perform(callback) {
-    async.each(this.points(), this.check.bind(this), callback);
+  async perform() {
+    await Promise.all(this.points().map(point => this.check(point)));
   }
 
   pointFromGraticle(date, pointArray) {

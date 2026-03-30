@@ -1,8 +1,11 @@
 var moment = require('moment');
-var nodemailer = require('nodemailer');
-var pug = require('pug');
+var webpush = require('web-push');
 
-var transporter = nodemailer.createTransport(process.env.SMTP_URL);
+webpush.setVapidDetails(
+  process.env.VAPID_SUBJECT || 'mailto:geohash@example.com',
+  process.env.VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY
+);
 
 class NotifySubscriber {
   constructor(distance, point, subscriber) {
@@ -11,44 +14,38 @@ class NotifySubscriber {
     this.subscriber = subscriber;
   }
 
-  perform(callback) {
+  async perform() {
     if (this.subscriber.needsNotify(this.point.date)) {
-      console.log(`notifying ${this.subscriber.email} for date ${this.point.date}`);
-      this.sendEmail(callback);
-    } else {
-      callback();
+      console.log(`notifying subscriber ${this.subscriber._id} for date ${this.point.date}`);
+      await this.sendPush();
     }
-  }
-
-  mailHTML() {
-    return pug.renderFile('views/email.pug', {
-      distance: this.distance,
-      point: this.point,
-      prettyDate: this.prettyDate(),
-      subscriber: this.subscriber,
-      env: process.env,
-    });
-  }
-
-  mailOptions() {
-    return {
-      from: process.env.SENDER_EMAIL || 'geohash@noreply.com',
-      to: this.subscriber.email,
-      subject: 'Geohash Nearby! ' + this.prettyDate(),
-      html: this.mailHTML(),
-    };
   }
 
   prettyDate() {
     return moment(this.point.date).format('dddd Do MMM');
   }
 
-  sendEmail(callback) {
-    transporter.sendMail(this.mailOptions(), (err, info) => {
-      if (err) console.log(err);
-      if (info) console.log(info);
-      this.subscriber.updateNotified(this.point.date, callback);
+  payload() {
+    const distanceKm = (this.distance / 1000).toFixed(1);
+    return JSON.stringify({
+      title: 'Geohash Nearby! ' + this.prettyDate(),
+      body: `A geohash is ${distanceKm} km from your location!`,
+      url: `https://www.openstreetmap.org/?mlat=${this.point.latitude}&mlon=${this.point.longitude}#map=12/${this.point.latitude}/${this.point.longitude}`,
     });
+  }
+
+  async sendPush() {
+    try {
+      await webpush.sendNotification(this.subscriber.subscription, this.payload());
+      await this.subscriber.updateNotified(this.point.date);
+    } catch (err) {
+      if (err.statusCode === 410 || err.statusCode === 404) {
+        console.log(`Subscription expired for subscriber ${this.subscriber._id}, removing...`);
+        await this.subscriber.deleteOne();
+      } else {
+        console.error('Push notification error:', err);
+      }
+    }
   }
 }
 

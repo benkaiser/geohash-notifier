@@ -1,38 +1,25 @@
 {
   "name": "geohash-notifier",
-  "version": "1.0.0",
-  "description": "XKCD Geohash email notification service",
+  "version": "2.0.0",
+  "description": "XKCD Geohash browser push notification service",
   "main": "index.js",
   "author": "Benjamin Kaiser",
   "license": "MIT",
   "dependencies": {
-    "async": "^2.1.2",
-    "body-parser": "^1.15.2",
-    "dotenv": "^2.0.0",
-    "express": "^4.14.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
     "geohash-coordinates": "^1.1.6",
     "geolib": "^2.0.21",
-    "moment": "^2.15.2",
-    "mongoose": "^4.6.5",
-    "nodemailer": "^2.6.4",
-    "pug": "^2.0.0-beta6"
+    "moment": "^2.29.4",
+    "mongoose": "^7.6.3",
+    "pug": "^3.0.2",
+    "web-push": "^3.6.6"
   },
   "scripts": {
-    "nodemon": "./node_modules/nodemon/bin/nodemon.js -x 'node --harmony' index.js",
-    "test": "./node_modules/mocha/bin/mocha --harmony --recursive",
-    "start": "node --harmony index.js"
-  },
-  "devDependencies": {
-    "chai": "^3.5.0",
-    "mocha": "^3.1.2",
-    "mockery": "^2.0.0",
-    "nodemon": "^1.11.0",
-    "sinon": "^1.17.6"
+    "start": "node index.js",
+    "generate-vapid-keys": "npx web-push generate-vapid-keys"
   },
   "engines": {
-      "node": "6"
-  },
-  "jscsConfig": {
-    "requireTrailingComma": false
+    "node": ">=18"
   }
 }

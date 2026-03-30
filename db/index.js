@@ -1,8 +1,7 @@
 class Database {
   constructor() {
     this.mongoose = require('mongoose');
-    this.mongoose.Promise = global.Promise;
-    this.mongoose.connect(process.env.DATABASE_URL);
+    this.mongoose.connect(process.env.MONGO_URL || process.env.DATABASE_URL);
     this.setupModels();
   }
 

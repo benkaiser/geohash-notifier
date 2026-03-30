@@ -1,89 +1,188 @@
 extends layout.pug
 
 block content
-  h1 Geohash Notification Service
-  p.lead
-    | This is a service to notify you everytime a
-    a(href='https://xkcd.com/426/')  geohash
-    |  is within a given radius of a location.
-  if alert
-    .alert.alert-success(role="alert") #{alert}
-  form(action='/', method='POST')
-    .form-group
-      label(for='email') Email address
-      input#email.form-control(type='email', name='email', placeholder='Email', required)
-    .form-group
-      label(for='map') Select Location
-      #map
-      input#coordinates.form-control(type='text', disabled)
-      input#coordinates_hidden.form-control(type='hidden', name='coordinates')
-    .form-group
-      label(for='radius') Radius (Kilometers)
-      input#radius.form-control(type='number', oninput='updateRadius()', name='radius', value='20')
-    button.btn.btn-primary(type='submit') Submit
+  .py-4
+    h1.display-5.fw-bold Geohash Notification Service
+    p.lead
+      | Get notified via push notifications whenever an
+      a(href='https://xkcd.com/426/')  XKCD geohash
+      |  lands within a given radius of your location.
+
+  #alert-container
+    if alert
+      .alert.alert-success.alert-dismissible.fade.show(role="alert")
+        | #{alert}
+        button.btn-close(type='button', data-bs-dismiss='alert', aria-label='Close')
+
+  .card.mb-4
+    .card-body
+      h5.card-title Select Your Location
+      p.card-text Click on the map to choose a location, or allow geolocation to auto-detect.
+      #map.mb-3
+      .row.g-3.align-items-end
+        .col-md-4
+          label.form-label(for='latitude') Latitude
+          input#latitude.form-control(type='text', readonly)
+        .col-md-4
+          label.form-label(for='longitude') Longitude
+          input#longitude.form-control(type='text', readonly)
+        .col-md-4
+          label.form-label(for='radius') Radius (km)
+          input#radius.form-control(type='number', min='1', max='500', value='20')
+
+  .card.mb-4
+    .card-body
+      h5.card-title Enable Notifications
+      p.card-text Allow push notifications and we'll alert you when a geohash is nearby.
+      button#subscribe-btn.btn.btn-primary.btn-lg(type='button', disabled)
+        | Loading...
+      #status-message.mt-3
 
 block scripts
   script.
-      var map;
-      var marker;
-      var circle;
-      var radius = 20;
+    var map, marker, circle;
+    var selectedLat = null, selectedLng = null;
 
-      function initMap() {
-        var Australia = {lat: -25.363, lng: 131.044};
-        map = new google.maps.Map(document.getElementById('map'), {
-          zoom: 3,
-          center: Australia
+    // Initialize Leaflet map
+    map = L.map('map').setView([0, 0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19,
+    }).addTo(map);
+
+    function placeMarker(lat, lng) {
+      selectedLat = lat;
+      selectedLng = lng;
+      document.getElementById('latitude').value = lat.toFixed(6);
+      document.getElementById('longitude').value = lng.toFixed(6);
+
+      if (marker) map.removeLayer(marker);
+      marker = L.marker([lat, lng]).addTo(map);
+
+      updateCircle();
+      updateSubscribeButton();
+    }
+
+    function updateCircle() {
+      if (!marker) return;
+      var radiusKm = parseFloat(document.getElementById('radius').value) || 20;
+      if (circle) map.removeLayer(circle);
+      circle = L.circle(marker.getLatLng(), {
+        radius: radiusKm * 1000,
+        color: '#AA0000',
+        fillColor: '#AA0000',
+        fillOpacity: 0.15,
+        weight: 1,
+      }).addTo(map);
+    }
+
+    map.on('click', function(e) {
+      placeMarker(e.latlng.lat, e.latlng.lng);
+    });
+
+    document.getElementById('radius').addEventListener('input', updateCircle);
+
+    // Geolocation auto-center
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        var lat = position.coords.latitude;
+        var lng = position.coords.longitude;
+        map.setView([lat, lng], 10);
+        placeMarker(lat, lng);
+      });
+    }
+
+    // Push notification subscription
+    var vapidPublicKey = '#{vapidPublicKey}';
+    var subscribeBtn = document.getElementById('subscribe-btn');
+    var statusMessage = document.getElementById('status-message');
+
+    function urlBase64ToUint8Array(base64String) {
+      var padding = '='.repeat((4 - base64String.length % 4) % 4);
+      var base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+      var rawData = window.atob(base64);
+      var outputArray = new Uint8Array(rawData.length);
+      for (var i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
+    }
+
+    function updateSubscribeButton() {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        subscribeBtn.textContent = 'Push notifications not supported';
+        subscribeBtn.disabled = true;
+        return;
+      }
+      if (selectedLat === null || selectedLng === null) {
+        subscribeBtn.textContent = 'Select a location first';
+        subscribeBtn.disabled = true;
+        return;
+      }
+      subscribeBtn.textContent = 'Enable Notifications';
+      subscribeBtn.disabled = false;
+    }
+
+    function showStatus(message, type) {
+      statusMessage.innerHTML = '<div class="alert alert-' + type + '">' + message + '</div>';
+    }
+
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').then(function() {
+        updateSubscribeButton();
+      }).catch(function(err) {
+        console.error('Service worker registration failed:', err);
+        subscribeBtn.textContent = 'Service worker failed';
+      });
+    } else {
+      subscribeBtn.textContent = 'Push notifications not supported';
+    }
+
+    subscribeBtn.addEventListener('click', async function() {
+      subscribeBtn.disabled = true;
+      subscribeBtn.textContent = 'Subscribing...';
+
+      try {
+        var permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          showStatus('Notification permission denied. Please allow notifications in your browser settings.', 'warning');
+          updateSubscribeButton();
+          return;
+        }
+
+        var registration = await navigator.serviceWorker.ready;
+        var subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
         });
-        google.maps.event.addListener(map, 'click', function(event) {
-          placeMarker(event.latLng);
-          updateCircle();
-          updateInput(event.latLng);
+
+        var radius = parseFloat(document.getElementById('radius').value) || 20;
+
+        var response = await fetch('/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subscription: subscription.toJSON(),
+            latitude: selectedLat,
+            longitude: selectedLng,
+            radius: radius,
+          }),
         });
-      }
 
-      function placeMarker(location) {
-        if (marker) marker.setMap(null);
-        marker = new google.maps.Marker({
-          position: location,
-          map: map
-        });
+        var result = await response.json();
+        if (result.success) {
+          showStatus(result.message, 'success');
+          subscribeBtn.textContent = 'Subscribed!';
+          subscribeBtn.classList.remove('btn-primary');
+          subscribeBtn.classList.add('btn-success');
+        } else {
+          showStatus(result.error || 'Something went wrong', 'danger');
+          updateSubscribeButton();
+        }
+      } catch (err) {
+        console.error('Subscription error:', err);
+        showStatus('Failed to subscribe: ' + err.message, 'danger');
+        updateSubscribeButton();
       }
-
-      function updateInput(location) {
-        var input = document.getElementById('coordinates');
-        var hiddenInput = document.getElementById('coordinates_hidden');
-        var value = location.lat() + ',' +  location.lng();
-        input.value = value;
-        hiddenInput.value = value;
-      }
-
-      function updateRadius() {
-        radius = document.getElementById('radius').value;
-        updateCircle();
-      }
-
-      function updateCircle() {
-        if (!marker) return;
-        if (circle) circle.setMap(null);
-        circle = new google.maps.Circle({
-          clickable: false,
-          fillColor: '#AA0000',
-          map: map,
-          radius: radius * 1000,    // 10 miles in metres
-          strokeOpacity: 0.1,
-        });
-        circle.bindTo('center', marker, 'position');
-      }
-
-      if (navigator.geolocation) {
-         navigator.geolocation.getCurrentPosition(function (position) {
-           initialLocation = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-           map.setCenter(initialLocation);
-           map.setZoom(8);
-           placeMarker(initialLocation);
-           updateCircle();
-           updateInput(initialLocation);
-         });
-       }
-  script(src='https://maps.googleapis.com/maps/api/js?key=' + env.GOOGLE_API_KEY + '&callback=initMap', async='', defer='')
+    });

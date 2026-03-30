@@ -7,7 +7,7 @@ class SubscriberModel {
 
   modelProperties() {
     var subscriberSchema = new mongoose.Schema({
-      email: String,
+      subscription: Object,
       latitude: Number,
       longitude: Number,
       radius: Number,
@@ -22,11 +22,11 @@ class SubscriberModel {
     return (this.lastNotified == undefined || this.lastNotified < date);
   }
 
-  updateNotified(date, callback) {
+  async updateNotified(date) {
     if (this.lastNotified === undefined || date > this.lastNotified) {
       this.set('lastNotified', date);
     }
-    this.save(callback);
+    await this.save();
   }
 
   get name() { return 'subscribers'; }

@@ -1,24 +1,41 @@
 ## Geohash Notification Service
 
-I host an instance of this at [geohash.kaiserapps.com](https://geohash.kaiserapps.com), feel free to go and register for notifications there.
+Get browser push notifications whenever an [XKCD geohash](https://xkcd.com/426/) lands near your chosen location.
+
+I host an instance of this at [geohash.kaiserapps.com](https://geohash.kaiserapps.com), feel free to go and subscribe for notifications there.
 
 However if you are the super-privacy kind or would just like to run it yourself, follow the below developer instructions.
 
+### How It Works
+
+1. Visit the app and select a location on the Leaflet/OpenStreetMap map
+2. Set a radius (in km) for how close a geohash needs to be
+3. Click "Enable Notifications" to subscribe to browser push notifications
+4. When a geohash lands within your radius, you'll get a push notification
+5. Click the notification to open OpenStreetMap at the geohash coordinates
+
 ### Developer Instructions
 
-This application is built with deployment to dokku / heroku in mind. For those you will need to set the following environment variables:
+This application is built with deployment to Dokku / Heroku in mind.
 
-#### Environment variables
+#### Environment Variables
 
 ```
-GOOGLE_API_KEY=<your google maps api key>
-SMTP_URL=smtps://user%40gmail.com:pass@smtp.gmail.com
-SENDER_EMAIL=user@gmail.com
+VAPID_PUBLIC_KEY=<your VAPID public key>
+VAPID_PRIVATE_KEY=<your VAPID private key>
+VAPID_SUBJECT=mailto:your@email.com
+MONGO_URL=mongodb://localhost:27017/geohash-notifier
 ```
 
-If you would like to use the direct mail transport, then there is no need to set `SMTP_URL`.
+#### Generating VAPID Keys
 
-The Google API key has to be for both the Google Maps Javascript API, as well as for the Google Static Maps API (for showing a map preview in sent email).
+```
+npx web-push generate-vapid-keys
+```
+
+This will output a public and private key pair. Set them as environment variables.
+
+**Note:** HTTPS is required for service workers and push notifications (except on localhost for development).
 
 #### Running in Docker + Docker Compose
 
@@ -26,17 +43,33 @@ The Google API key has to be for both the Google Maps Javascript API, as well as
 bin/go
 ```
 
-And you're done! Good to go! try it out on http://localhost:3000
+And you're done! Good to go! Try it out on http://localhost:3000
 
 #### Without Docker
 
 You'll need:
-- Node.js 6
-- Mongodb running
+- Node.js >= 18
+- MongoDB running
 
-then execute
+Then execute:
 
 ```
-yarn
-APP_URL=http://localhost:3000 npm start
+npm install
+MONGO_URL=mongodb://localhost:27017/geohash-notifier npm start
 ```
+
+#### Checking for Geohashes
+
+Run the check job manually or set up a cron to run it periodically:
+
+```
+node jobs/check_stocks.js
+```
+
+#### Deploying to Dokku
+
+```
+git push dokku@benkaiser.dev:geohash-notifier master
+```
+
+The buildpack auto-detects Node.js from package.json.

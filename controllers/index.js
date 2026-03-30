@@ -4,30 +4,33 @@ var router = express.Router();
 let db = require('../db');
 
 router.get('/', function (req, res) {
-  res.render('form');
+  res.render('form', { vapidPublicKey: res.locals.vapidPublicKey });
 });
 
-router.post('/', function(req, res) {
-  db.subscribers.create(filterBody(req.body));
-  res.render('form', { alert: "Awesome! We'll let you know when a geohash is nearby" });
-});
+router.post('/', async function(req, res) {
+  try {
+    const { subscription, latitude, longitude, radius } = req.body;
 
-router.get('/unsubscribe', function(req, res) {
-  db.subscribers.find({ $or: [
-    { _id: req.query.id },
-    { email: req.query.email }
-  ]}).remove().exec();
-  res.render('form', { alert: 'Unsubscribe successful'});
-});
+    if (!subscription || !subscription.endpoint || !latitude || !longitude || !radius) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
 
-function filterBody(body) {
-  var [latitude, longitude] = body.coordinates.split(',');
-  return {
-    email: body.email,
-    latitude: parseFloat(latitude),
-    longitude: parseFloat(longitude),
-    radius: parseFloat(body.radius),
-  };
-}
+    await db.subscribers.findOneAndUpdate(
+      { 'subscription.endpoint': subscription.endpoint },
+      {
+        subscription: subscription,
+        latitude: parseFloat(latitude),
+        longitude: parseFloat(longitude),
+        radius: parseFloat(radius),
+      },
+      { upsert: true, new: true }
+    );
+
+    res.json({ success: true, message: "Awesome! We'll let you know when a geohash is nearby" });
+  } catch (err) {
+    console.error('Error saving subscription:', err);
+    res.status(500).json({ error: 'Failed to save subscription' });
+  }
+});
 
 module.exports = router;
