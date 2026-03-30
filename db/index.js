@@ -1,7 +1,11 @@
 class Database {
   constructor() {
     this.mongoose = require('mongoose');
-    this.mongoose.connect(process.env.MONGO_URL || process.env.DATABASE_URL);
+    this.mongoose.set('useFindAndModify', false);
+    this.mongoose.connect(process.env.MONGO_URL || process.env.DATABASE_URL, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
     this.setupModels();
   }
 

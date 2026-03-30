@@ -11,7 +11,7 @@
     "geohash-coordinates": "^1.1.6",
     "geolib": "^2.0.21",
     "moment": "^2.29.4",
-    "mongoose": "^7.6.3",
+    "mongoose": "^5.13.22",
     "pug": "^3.0.2",
     "web-push": "^3.6.6"
   },
