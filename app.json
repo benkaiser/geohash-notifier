@@ -2,7 +2,7 @@
   "cron": [
     {
       "command": "node jobs/check_stocks.js",
-      "schedule": "35 14 * * 1-5"
+      "schedule": "35 14 * * *"
     }
   ]
 }
